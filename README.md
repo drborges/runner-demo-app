@@ -1,24 +1,12 @@
-# README
+# Payments Demo APp
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+This app serves only for demo purposes on how to implement Runner.js and start processing payments.
 
-Things you may want to cover:
+The account is linked linked to a "general purpose" testing account in production so you can test freely.
 
-* Ruby version
+### Getting started
 
-* System dependencies
-
-* Configuration
-
-* Database creation
-
-* Database initialization
-
-* How to run the test suite
-
-* Services (job queues, cache servers, search engines, etc.)
-
-* Deployment instructions
-
-* ...
+* clone the repo
+* `bundle i`
+* `rails db:migrate`
+* `rails s -p 3005` (or some other port)
