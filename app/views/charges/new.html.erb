@@ -1,0 +1,134 @@
+<div id="pay-example">
+  <div>Here is an example payment form, we will charge the card (auth + capture)</div>
+
+  <form onsubmit="return false;">
+      <div class="group">
+        <label>
+          <span>First Name</span>
+          <input
+  name="cardholder-first-name" class="field input-box" placeholder="Jane" />
+        </label>
+        <label>
+          <span>Last Name</span>
+          <input name="cardholder-last-name" class="field input-box" placeholder="Doe" />
+        </label>
+        <label>
+          <span>Phone</span>
+          <input name="phone" class="field input-box"  placeholder="+1000000000000" />
+        </label>
+      </div>
+      <div class="group" style="height: 200px;">
+        <label>
+          <span>Card</span>
+          <div id="card-element" class="field">
+            <div id="run-form"></div>
+          </div>
+        </label>
+      </div>
+      <button id="paybutton">Pay</button>
+      <div class="outcome">
+        <div class="error"></div>
+        <div class="success">
+          Successful! Transaction ID:
+          <span class="token"></span>
+        </div>
+        <div class="loader" style="margin: auto">
+        </div>
+    </form>
+</div>
+
+<script>
+  (function() {
+    console.log('initializing run...');
+
+    var runner = new Runner();
+    runner.init({
+      element: '#run-form',
+      publicKey: 'ZoLmnZrHMzbcR2uZeixvsCyZ',
+      css: 'input%7Bwidth%3A200px%3B%7D',
+      useExpiry: true,
+      useCvv: true,
+      cardLabel: 'My card label',
+      cvvLabel: 'My cvv label',
+      expiryLabel: 'My expiry label',
+    });
+
+    var payButton = document.querySelector('#paybutton');
+
+    document.querySelector('#paybutton').onclick = () => {
+      var successElement = document.querySelector('.success');
+      var errorElement = document.querySelector('.error');
+      var loaderElement = document.querySelector('.loader');
+
+      successElement.classList.remove('visible');
+      errorElement.classList.remove('visible');
+      loaderElement.classList.add('visible');
+
+      var form = document.querySelector('form');
+      var extraDetails = {
+        amount: 10000,
+        name: form.querySelector('input[name=cardholder-first-name]').value + ' ' + form.querySelector('input[name=cardholder-last-name]').value,
+        company_name: 'acme',
+        email: '',
+        phone: form.querySelector('input[name=phone]').value,
+        address1: '100 S Orange Ave',
+        address2: '',
+        address_city: 'Orlando',
+        address_state: 'FL',
+        account_zip: '32811',
+        address_country: 'USA',
+        order_id: '100',
+        capture: 'Y',
+        vault: 'Y',
+        cvn: '123'
+      };
+
+      // Runner.js tokenizes raw data here and returns token in the response
+      runner.tokenize((res) => {
+        console.log(res);
+
+        var xhr = new XMLHttpRequest();
+        // now we send tokenized card to our backend and from there we can start charging the card
+        xhr.open("POST", 'http://localhost:3005' + '/charge', true);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+
+        xhr.onerror = function (err) {
+          errorElement.textContent = typeof err === 'object' ? (err && err.error) || Object.keys(err).map((k) => err[k].join(' ')).join(' ') : JSON.stringify(err);
+          errorElement.classList.add('visible');
+          loaderElement.classList.remove('visible');
+        };
+
+        var params = JSON.stringify({
+          ...extraDetails,
+          account_token: res.account_token, // tokenized card
+          expiration: res.expiry, // expiration
+        });
+
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState == XMLHttpRequest.DONE) {
+                alert(xhr.responseText);
+
+                var resp = JSON.parse(xhr.responseText);
+                console.log(resp);
+
+                if (resp['trans_id']) {
+                  successElement.querySelector('.token').textContent = resp['trans_id'];
+                  successElement.classList.add('visible');
+                  loaderElement.classList.remove('visible');
+                } else {
+                  errorElement.textContent = typeof resp === 'object' ? (resp && resp.error) || Object.keys(resp).map((k) => resp[k].join(' ')).join(' ') : JSON.stringify(resp);
+                  errorElement.classList.add('visible');
+                  loaderElement.classList.remove('visible');
+                }
+            }
+        }
+
+        console.log(params);
+        // send the request and parse the response
+        xhr.send(params);
+
+      })
+    };
+  })();
+</script>
+
