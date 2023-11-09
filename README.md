@@ -7,6 +7,7 @@ The account is linked linked to a "general purpose" testing account in productio
 ### Getting started
 
 * clone the repo
+* create a .env file in the root of the project and set API_KEY variable to one you can obtain from RunPayments
 * `bundle i`
 * `rails db:migrate`
 * `rails s -p 3005` (or some other port)
